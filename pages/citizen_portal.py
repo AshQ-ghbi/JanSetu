@@ -208,10 +208,13 @@ def mark_paid(query_id: int) -> bool:
 # QR CODE GENERATOR
 # ════════════════════════════════════════════════════════════
 
+UPI_ID = "kr.ashish535.hd@okaxis"
+UPI_NAME = "JanSetu"
+
 def make_qr(fee: int):
     if not QR_AVAILABLE:
         return None
-    upi = f"upi://pay?pa=jansetu@upi&pn=JanSetu&am={fee}&cu=INR&tn=JanSetu+Consultation"
+    upi = f"upi://pay?pa={UPI_ID}&pn={UPI_NAME}&am={fee}&cu=INR&tn=JanSetu+Consultation"
     qr = qrcode.QRCode(version=2, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=8, border=3)
     qr.add_data(upi)
     qr.make(fit=True)
@@ -396,15 +399,26 @@ if st.session_state["current_solver"]:
 
         with qr_col:
             st.markdown("**📱 Scan with any UPI App**")
+            upi_deep_link = f"upi://pay?pa={UPI_ID}&pn={UPI_NAME}&am={solver['fee']}&cu=INR&tn=JanSetu+Consultation"
             qr_bytes = make_qr(solver["fee"])
             if qr_bytes:
                 st.image(qr_bytes, width=240, caption=f"Pay ₹{solver['fee']} — JanSetu Escrow")
             else:
-                upi_link = f"upi://pay?pa=kr.ashish535.hd-1@okicici&pn=JanSetu&am={solver['fee']}&cu=INR"
-                st.code(upi_link)
+                st.code(upi_deep_link)
                 st.caption("⚠️ Install `qrcode[pil]` in requirements.txt for QR image")
 
-            st.caption(f"UPI ID: **kr.ashish535.hd-1@okicici**   |   Amount: **₹{solver['fee']}**")
+            st.caption(f"UPI ID: **{UPI_ID}**   |   Amount: **₹{solver['fee']}**")
+
+            # Mobile deep link button — opens GPay/PhonePe/Paytm directly on phone
+            st.markdown(
+                f'<a href="{upi_deep_link}" '
+                f'style="display:inline-block;margin-top:8px;padding:10px 18px;'
+                f'background:#6C3CE1;color:white;border-radius:8px;'
+                f'text-decoration:none;font-size:14px;font-weight:bold;">'
+                f'📲 Open UPI App (Mobile)</a>',
+                unsafe_allow_html=True,
+            )
+            st.caption("☝️ On mobile — tap above to open GPay / PhonePe / Paytm directly")
 
         with info_col:
             st.markdown("**📲 Steps to Pay:**")
