@@ -1,98 +1,163 @@
 import io
 import streamlit as st
 
-# ── Lazy imports (installed via requirements.txt) ────────────
 try:
     import qrcode
-    from qrcode.image.pil import PilImage
     QR_AVAILABLE = True
 except ImportError:
     QR_AVAILABLE = False
 
-# ── Supabase client from session state ──────────────────────
+# ── Supabase client ─────────────────────────────────────────
 supabase = st.session_state.get("supabase")
 
 # ════════════════════════════════════════════════════════════
-# SECTION A — NLP CLASSIFIER
+# NLP CLASSIFIER
 # ════════════════════════════════════════════════════════════
 
-DOMAIN_KEYWORDS: dict[str, list[str]] = {
+DOMAIN_KEYWORDS = {
     "Agriculture": [
-        "crop", "pest", "farming", "kisan", "fasal", "weather", "rain",
-        "drought", "fertilizer", "kheti", "soil", "harvest", "insect",
-        "blight", "mandi", "wheat", "rice", "cotton", "soybean", "irrigation",
-        "seeds", "pesticide", "weed", "locust", "fungus", "agri",
-    ],
+    "crop", "pest", "farming", "kisan", "fasal", "weather", "rain", "drought",
+    "fertilizer", "kheti", "soil", "harvest", "insect", "blight", "mandi",
+    "wheat", "rice", "cotton", "soybean", "irrigation", "seeds", "pesticide",
+    "weed", "locust", "fungus", "agri", "field", "khet", "beej", "paudha",
+    "khad", "paani", "sinchai", "mitti", "mausam", "baarish", "keda", "rog",
+    "kisan_seva", "tractor", "yield", "organic", "jaivik", "pyaaz", "aloo",
+    "tamatar", "khetibadi", "bazaar", "daam", "bhav", "subsidy", "bima",
+    "msp", "ganna", "sarson", "makka", "dal", "chana", "bajra", "jowar",
+    "monsoon", "tubewell", "compost", "gobar", "nimbori", "dhaan", "kanak",
+    "katar", "katai", "buwai", "mandi_bhav", "loan", "karza", "rin", "krishi",
+    "polyhouse", "greenhouse", "nursery", "hybrid", "drone", "agritech", "storage",
+    "godown", "cold_storage", "fpo", "agrimarket", "livestock", "pashu", "dairy",
+    "fodder", "chara", "ghee", "doodh", "poultry", "murgi", "machli", "fisheries"
+],
     "Education": [
-        "study", "school", "exam", "tutor", "student", "learn", "marks",
-        "class", "teacher", "padhai", "book", "coaching", "math", "science",
-        "english", "board", "neet", "jee", "degree", "college", "scholarship",
-        "homework", "assignment", "syllabus", "cbse", "ncert",
-    ],
+    "education", "shiksha", "padhai", "school", "college", "university", "coaching",
+    "tuition", "teacher", "guru", "shikshak", "student", "chhatra", "vidyarthi",
+    "class", "kaksha", "syllabus", "pathyakram", "exam", "pariksha", "test",
+    "result", "parinama", "parikshafal", "marks", "ank", "degree", "diploma",
+    "certificate", "praman_patra", "admission", "daakhila", "fees", "shulk",
+    "scholarship", "chhatravriti", "book", "kitaab", "pustak", "copy", "notebook",
+    "pen", "pencil", "bag", "basta", "homework", "griha_karya", "learning",
+    "seekhna", "study", "adhyayan", "science", "vigyan", "maths", "ganit",
+    "history", "itihaas", "geography", "bhoogol", "english", "hindi", "sanskrit",
+    "commerce", "arts", "engineering", "medical", "law", "career", "job",
+    "naukri", "rozgar", "skills", "hunar", "kaushal", "training", "prashikshan",
+    "online_class", "digital_learning", "e_learning", "mock_test", "notes",
+    "quiz", "rank", "pass", "fail", "anuttirn", "uttirn", "board_exam", "cbse",
+    "icse", "state_board", "ncert", "iit", "jee", "neet", "upsc", "ssc",
+    "banking", "sarkari_exam", "sarkari_naukri", "literacy", "saksharta",
+    "lecture", "bhashan", "period", "timetable", "attendance", "haziri", "upasthiti",
+    "principal", "pradhanacharya", "professor", "classroom", "varg", "library",
+    "pustakalaya", "laboratory", "lab", "prayogshala", "blackboard", "syallabus",
+    "chapter", "paath", "subject", "vishay", "project", "assignment", "degree_college",
+    "hostel", "chatravas", "playground", "khel_ka_maidan", "sports", "khel",
+    "degree_certificate", "marksheet", "ankpatra", "report_card", "prospectus",
+    "registration", "panjiyan", "form", "vazifa", "stipend", "education_loan",
+    "shiksha_rin", "higher_education", "ucch_shiksha", "primary_school",
+    "primary_shiksha", "play_school", "balwadi", "anganwadi", "btech", "mtech",
+    "mba", "bba", "bcom", "ba", "bsc", "phd", "research", "shodh", "knowledge",
+    "gyan", "wisdom", "buddhi", "intelligence", "genius", "topper", "ranker",
+    "cheating", "nakal", "suspension", "rusticate", "degree_validity", "ugc",
+    "aicte", "distance_learning", "open_school", "nios", "ignou", "skill_development",
+    "kaushal_vikas", "placement", "interview", "sakshatkar", "resume", "cv",
+    "internship", "paper_leak", "re-evaluation", "re-checking", "re-appear", "compartment"
+],
     "Healthcare": [
-        "doctor", "fever", "pain", "hospital", "medicine", "sick", "ill",
-        "health", "opd", "treatment", "clinic", "dawa", "bukhar", "blood",
-        "sugar", "diabetes", "bp", "cough", "cold", "child", "baby",
-        "pregnant", "delivery", "nurse", "ayushman", "vaccine", "injection",
-    ],
+    "healthcare", "swasthya", "ilaj", "treatment", "doctor", "vaidya", "hospital",
+    "aspatal", "clinic", "dispensary", "dawakhana", "medicine", "dawa", "aushadhi",
+    "nurse", "patient", "mareez", "bimar", "disease", "bimari", "infection", "sankraman",
+    "fever", "bukhar", "cough", "khansi", "cold", "zukam", "pain", "dard", "injury", "chot",
+    "accident", "ghatna", "durghatna", "emergency", "aapatkal", "ambulance", "operation",
+    "surgery", "chiir_faad", "delivery", "prasav", "pregnancy", "garbhavastha", "vaccine",
+    "teeka", "teekakaran", "immunity", "rogh_pratirodhak", "blood", "khoon", "rakta",
+    "test", "jaanch", "lab", "xray", "sonography", "mri", "pharmacy", "chemist",
+    "medical_store", "ayushman_bharat", "health_card", "bima", "insurance", "ayurveda",
+    "homeopathy", "unani", "siddha", "yoga", "poshan", "nutrition", "diet", "aahar",
+    "vitamin", "malnutrition", "kuposhan", "hygiene", "swachhta", "safai", "first_aid",
+    "prathmik_chikitsha", "asha_worker", "anm", "phc", "chc", "district_hospital",
+    "generic_dawa", "jan_aushadhi", "sugar", "madhumeh", "blood_pressure", "bp",
+    "cancer", "heart_attack", "dil_ka_daura", "paralysis", "lakwa", "asthma", "dama",
+    "tb", "tapedik", "malaria", "dengue", "diarrhea", "dast", "vomit", "ulti",
+    "mental_health", "manasik_swasthya", "stress", "tanaav", "depression", "avasad",
+    "disabled", "divyang", "blind", "andhaa", "deaf", "behra", "physiotherapy",
+    "stretcher", "wheelchair", "oxygen_cylinder", "icu", "ventilator", "ward",
+    "health_camp", "swasthya_shivir", "blood_bank", "raktdan", "telemedicine",
+    "online_doctor", "consultation", "salaah", "prescription", "parcha", "fees"
+],
     "MSME": [
-        "loan", "business", "shop", "udyog", "mudra", "msme", "registration",
-        "gst", "invoice", "credit", "bank", "startup", "trade", "sell",
-        "market", "entrepreneur", "license", "subsidy", "export", "import",
-        "goods", "manufacturing", "capital", "finance", "account",
-    ],
+    "msme", "udyog", "vyapar", "business", "small_business", "chota_vyapar", "industry",
+    "karkhana", "factory", "enterprise", "udyam", "udyam_registration", "panjiyan",
+    "micro_enterprise", "small_enterprise", "medium_enterprise", "laghu_udyog",
+    "kutir_udyog", "cottage_industry", "handicraft", "hastshilp", "handloom", "hathkargha",
+    "artisan", "karigar", "weaver", "bunkar", "startup", "entrepreneur", "udyami",
+    "loan", "karza", "rin", "mudra_loan", "sidbi", "cgtsme", "subsidy", "choat",
+    "grant", "anudan", "investment", "nivesh", "capital", "poonji", "profit", "munafa",
+    "loss", "nuksan", "turnover", "benaami", "gst", "tax", "kar", "invoice", "bill",
+    "khata", "ledger", "bookkeeping", "hisaab", "wholesale", "thok", "retail", "chutkar",
+    "mandi", "bazaar", "market", "supply_chain", "logistics", "raw_material", "kachha_maal",
+    "manufacturing", "utpadan", "production", "packaging", "packing", "cluster",
+    "geM_portal", "e_commerce", "online_bazaar", "inventory", "stock", "maal",
+    "trader", "vyapari", "merchant", "ducandar", "supplier", "distributor", "vendor",
+    "fssai", "license", "trademark", "brand", "export", "niryat", "import", "aayat",
+    "digital_payment", "upi", "qr_code", "cash_on_delivery", "cod", "nagad", "udhaar",
+    "interest_rate", "byaj_dar", "collateral", "guarantee", "subsidy_claim",
+    "tender", "theka", "contract", "partner", "sajhedar", "worker", "mazdoor"
+]
+,
     "Rural Access": [
-        "internet", "village", "gaon", "connectivity", "digital", "wifi",
-        "mobile", "sim", "network", "signal", "csc", "e-governance",
-        "certificate", "ration", "aadhar", "pension", "scheme", "sarkari",
-        "jan dhan", "pm kisan", "electricity", "bijli", "road", "panchayat",
-    ],
+    "rural_access", "gramin_vikas", "gaon_tak_pahunch", "connectivity", "sampark",
+    "road", "sadak", "prakalp", "pmgsy", "transport", "parivahan", "bus", "auto",
+    "railway", "station", "internet", "broadband", "wi_fi", "network", "signal",
+    "tower", "digital_india", "csc", "common_service_centre", "jan_seva_kendra",
+    "banking_correspondent", "bank_mitra", "atm", "digipay", "e_shram", "ration_card",
+    "ration_dukan", "pds", "koota", "electricity", "bijli", "power_cut", "katoti",
+    "solar", "soorja", "water_supply", "peyal", "nal_jal", "well", "kuan",
+    "handpump", "chapa_kal", "panchayat", "gram_sabha", "sarpanch", "pradhan", "sachiv",
+    "ward_member", "block", "tehsil", "zilla", "district", "post_office", "daak_ghar",
+    "postman", "daakiya", "delivery", "courier", "community", "samuday", "shakti",
+    "self_help_group", "shg", "swayam_sahayata_samuh", "ngo", "volunteer", "swayansevak",
+    "mgnrega", "manrega", "rozgar_sevak", "job_card", "aadhaar_link", "dbt",
+    "pos_machine", "biometric", "angutha", "voter_card", "pehcahn_patra",
+    "caste_certificate", "jati_praman", "income_certificate", "aay_praman",
+    "niwas_praman", "domicile", "pension", "vridha_pension", "widow_pension",
+    "street_light", "khamba", "drainage", "naali", "toilet", "sauchalay", "odf",
+    "clean_water", "saaf_paani", "tanki", "dam", "bandh", "nehar", "bridge", "pul"
+],
 }
 
-DOMAIN_COLORS: dict[str, str] = {
-    "Agriculture": "#22C55E",
-    "Education":   "#3B82F6",
-    "Healthcare":  "#EF4444",
-    "MSME":        "#F59E0B",
-    "Rural Access":"#8B5CF6",
-}
-
-DOMAIN_ICONS: dict[str, str] = {
+DOMAIN_ICONS = {
     "Agriculture": "🌾",
-    "Education":   "📚",
+    "Education":   "🏫",
     "Healthcare":  "🏥",
     "MSME":        "🏪",
     "Rural Access":"📡",
 }
 
+DOMAIN_DESC = {
+    "Agriculture": "Agricultural Expert",
+    "Education":   "Education Specialist",
+    "Healthcare":  "Health Worker",
+    "MSME":        "Business Advisor",
+    "Rural Access":"Digital Access Specialist",
+}
+
 
 def classify_problem(text: str) -> str:
-    """
-    Keyword-frequency NLP classifier.
-    Scores each domain by counting matched keywords in lowercase text.
-    Returns the domain with the highest score, defaulting to 'Rural Access'.
-    """
     text_lower = text.lower()
-    scores: dict[str, int] = {domain: 0 for domain in DOMAIN_KEYWORDS}
-
+    scores = {d: 0 for d in DOMAIN_KEYWORDS}
     for domain, keywords in DOMAIN_KEYWORDS.items():
         for kw in keywords:
             if kw in text_lower:
                 scores[domain] += 1
-
-    best_domain = max(scores, key=lambda d: scores[d])
-    # If no keyword matched at all, default to Rural Access
-    if scores[best_domain] == 0:
-        return "Rural Access"
-    return best_domain
+    best = max(scores, key=lambda d: scores[d])
+    return best if scores[best] > 0 else "Rural Access"
 
 
 # ════════════════════════════════════════════════════════════
-# SECTION B — DATABASE HELPERS
+# DATABASE HELPERS
 # ════════════════════════════════════════════════════════════
 
-def fetch_solver_by_domain(domain: str) -> dict | None:
-    """Return the first active solver matching the given domain."""
+def fetch_solver(domain: str):
     try:
         res = (
             supabase.table("solvers")
@@ -103,17 +168,13 @@ def fetch_solver_by_domain(domain: str) -> dict | None:
             .limit(1)
             .execute()
         )
-        if res.data:
-            return res.data[0]
-        return None
+        return res.data[0] if res.data else None
     except Exception as e:
-        st.error(f"❌ Solver lookup failed: {e}")
+        st.error(f"❌ Could not fetch solver: {e}")
         return None
 
 
-def insert_query(citizen_name: str, raw_problem: str,
-                 ai_category: str, solver_id: int) -> int | None:
-    """Insert a new citizen query row and return its generated id."""
+def save_query(citizen_name, raw_problem, ai_category, solver_id):
     try:
         res = (
             supabase.table("queries")
@@ -126,16 +187,13 @@ def insert_query(citizen_name: str, raw_problem: str,
             })
             .execute()
         )
-        if res.data:
-            return res.data[0]["id"]
-        return None
+        return res.data[0]["id"] if res.data else None
     except Exception as e:
-        st.error(f"❌ Failed to save query: {e}")
+        st.error(f"❌ Could not save query: {e}")
         return None
 
 
-def mark_query_paid(query_id: int) -> bool:
-    """Update payment_status to 'Paid' for the given query id."""
+def mark_paid(query_id: int) -> bool:
     try:
         supabase.table("queries").update(
             {"payment_status": "Paid"}
@@ -147,35 +205,17 @@ def mark_query_paid(query_id: int) -> bool:
 
 
 # ════════════════════════════════════════════════════════════
-# SECTION C — QR CODE GENERATOR
+# QR CODE GENERATOR
 # ════════════════════════════════════════════════════════════
 
-def generate_upi_qr(fee: int) -> bytes | None:
-    """
-    Build a UPI deep-link and render it as a PNG QR code in memory.
-    Returns raw PNG bytes, or None if qrcode library is unavailable.
-    """
+def make_qr(fee: int):
     if not QR_AVAILABLE:
         return None
-
-    upi_link = (
-        f"upi://pay?pa=jansetu@upi"
-        f"&pn=JanSetu"
-        f"&am={fee}"
-        f"&cu=INR"
-        f"&tn=JanSetu+Consultation+Fee"
-    )
-
-    qr = qrcode.QRCode(
-        version=2,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
-        box_size=8,
-        border=3,
-    )
-    qr.add_data(upi_link)
+    upi = f"upi://pay?pa=jansetu@upi&pn=JanSetu&am={fee}&cu=INR&tn=JanSetu+Consultation"
+    qr = qrcode.QRCode(version=2, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=8, border=3)
+    qr.add_data(upi)
     qr.make(fit=True)
     img = qr.make_image(fill_color="#000080", back_color="white")
-
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
@@ -183,394 +223,266 @@ def generate_upi_qr(fee: int) -> bytes | None:
 
 
 # ════════════════════════════════════════════════════════════
-# SECTION D — PAGE RENDER
+# SESSION STATE INIT
 # ════════════════════════════════════════════════════════════
 
-# ── Page Header ─────────────────────────────────────────────
-st.markdown(
-    """
-    <div style='margin-bottom:0.25rem;'>
-        <span style='font-family:"Baloo 2",cursive; font-size:2rem;
-                     font-weight:800; color:#FF6B00;'>🙋‍♂️ Citizen Portal</span>
-    </div>
-    <div style='font-size:0.92rem; color:#6B7280; margin-bottom:0.5rem;'>
-        Describe your problem in <b>any language</b> — Hindi, English, or your local dialect.
-        JanSetu's AI will instantly match you with a verified local specialist.
-    </div>
-    <div class='tricolor-bar'></div>
-    """,
-    unsafe_allow_html=True,
-)
+for key, default in [
+    ("current_query_id", None),
+    ("current_solver", None),
+    ("payment_done", False),
+]:
+    if key not in st.session_state:
+        st.session_state[key] = default
 
-# ── How It Works strip ──────────────────────────────────────
+
+# ════════════════════════════════════════════════════════════
+# PAGE HEADER
+# ════════════════════════════════════════════════════════════
+
+st.markdown("## 🙋‍♂️ Citizen Portal")
+st.caption("Describe your problem in any language — Hindi, English, or your local dialect. JanSetu will instantly match you with a verified local specialist.")
+st.divider()
+
+# ── How It Works ────────────────────────────────────────────
+st.markdown("#### ✨ How It Works")
 c1, c2, c3, c4 = st.columns(4)
-steps = [
-    ("1️⃣", "Describe", "Type your problem"),
-    ("2️⃣", "AI Match",  "We classify & match"),
-    ("3️⃣", "Pay ₹",     "Scan UPI QR code"),
-    ("4️⃣", "Connect",   "Get expert contact"),
-]
-for col, (icon, title, desc) in zip([c1, c2, c3, c4], steps):
-    with col:
-        st.markdown(
-            f"""
-            <div style='text-align:center; padding:0.6rem 0.2rem;
-                        background:white; border-radius:10px;
-                        border:1px solid #E8DDD0; margin-bottom:1rem;'>
-                <div style='font-size:1.4rem;'>{icon}</div>
-                <div style='font-weight:700; font-size:0.82rem;
-                            color:#000080;'>{title}</div>
-                <div style='font-size:0.72rem; color:#9CA3AF;'>{desc}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+with c1:
+    st.info("**① Describe**\nType your problem in any language")
+with c2:
+    st.info("**② AI Match**\nWe classify & find your expert")
+with c3:
+    st.info("**③ Pay ₹**\nScan the UPI QR code")
+with c4:
+    st.info("**④ Connect**\nGet direct contact instantly")
+
+st.divider()
+
 
 # ════════════════════════════════════════════════════════════
-# SECTION E — INPUT FORM
+# INPUT FORM
 # ════════════════════════════════════════════════════════════
+
+st.markdown("#### 📝 Tell Us Your Problem")
 
 with st.form("citizen_form", clear_on_submit=False):
-    st.markdown("### 📝 Submit Your Problem")
-
-    col_name, col_lang = st.columns([2, 1])
+    col_name, col_gap = st.columns([2, 1])
     with col_name:
         citizen_name = st.text_input(
-            "Your Name / आपका नाम",
-            placeholder="e.g., Ramesh Kumar",
-            help="Enter your full name",
+            "Your Name / आपका नाम *",
+            placeholder="e.g. Ashish Kumar",
         )
-    with col_lang:
+    with col_gap:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown(
-            "<div class='info-box'>✅ Hindi & English supported</div>",
-            unsafe_allow_html=True,
-        )
+        st.success("✅ Hindi & English both supported")
 
     raw_problem = st.text_area(
-        "Describe your problem / अपनी समस्या बताएं",
+        "Describe your problem / अपनी समस्या बताएं *",
         placeholder=(
-            "e.g., 'Mere khet mein kal se patte pile pad rahe hain aur "
-            "pest ka attack lag raha hai. Koi salah do.' \n\n"
-            "or: 'My daughter needs affordable math tutoring for Class 10 boards.'"
+            "Example (Hindi): मेरे खेत में कल से पत्ते पीले पड़ रहे हैं, कोई सलाह दो।\n"
+            "Example (English): My daughter needs affordable tutoring for Class 10 board exams."
         ),
-        height=140,
-        help="Write in Hindi, English, or mix both — our AI understands all.",
+        height=150,
     )
 
     submitted = st.form_submit_button(
-        "🔍 Find My Specialist  →",
+        "🔍 Find My Specialist →",
         use_container_width=True,
         type="primary",
     )
 
+
 # ════════════════════════════════════════════════════════════
-# SECTION F — PROCESSING & RESULTS
+# FORM PROCESSING
 # ════════════════════════════════════════════════════════════
 
 if submitted:
-    # ── Validation ──────────────────────────────────────────
     if not citizen_name.strip():
-        st.warning("⚠️ Please enter your name.")
+        st.warning("⚠️ Please enter your Name.")
         st.stop()
     if len(raw_problem.strip()) < 10:
         st.warning("⚠️ Please describe your problem in at least 10 characters.")
         st.stop()
 
-    # ── Step 1: Classify ────────────────────────────────────
-    with st.spinner("🤖 JanSetu AI is analysing your problem…"):
+    with st.spinner("🤖 AI is analysing your problem..."):
         domain = classify_problem(raw_problem)
 
-    color = DOMAIN_COLORS[domain]
-    icon  = DOMAIN_ICONS[domain]
-
-    st.markdown(
-        f"""
-        <div style='display:flex; align-items:center; gap:12px;
-                    background:white; border-radius:12px; padding:1rem 1.25rem;
-                    border:1px solid {color}33; border-left:5px solid {color};
-                    margin:1rem 0;'>
-            <div style='font-size:2rem;'>{icon}</div>
-            <div>
-                <div style='font-size:0.72rem; color:#9CA3AF;
-                            text-transform:uppercase; letter-spacing:0.08em;'>
-                    AI Classification
-                </div>
-                <div style='font-family:"Baloo 2",cursive; font-size:1.3rem;
-                            font-weight:700; color:{color};'>
-                    {domain}
-                </div>
-            </div>
-            <div style='margin-left:auto; font-size:0.75rem; color:#6B7280;'>
-                Confidence: High ✅
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # ── Step 2: Fetch solver ─────────────────────────────────
-    with st.spinner("🔎 Matching you with the best local expert…"):
-        solver = fetch_solver_by_domain(domain)
+    with st.spinner("🔎 Finding the best Expert near you..."):
+        solver = fetch_solver(domain)
 
     if not solver:
-        st.error(
-            f"😔 No active solver found for **{domain}** right now. "
-            "Please try again shortly or contact support."
-        )
+        st.error(f"😔 No active solver found for **{domain}** right now. Please try again soon.")
         st.stop()
 
-    # ── Step 3: Save query to DB ────────────────────────────
-    query_id = insert_query(
+    query_id = save_query(
         citizen_name=citizen_name.strip(),
         raw_problem=raw_problem.strip(),
         ai_category=domain,
         solver_id=solver["id"],
     )
 
-    # Store in session state for payment confirmation
     st.session_state["current_query_id"] = query_id
     st.session_state["current_solver"]   = solver
     st.session_state["payment_done"]     = False
 
+
 # ════════════════════════════════════════════════════════════
-# SECTION G — SOLVER CARD + PAYMENT FLOW
-# (Persists across reruns via session_state)
+# RESULTS SECTION
 # ════════════════════════════════════════════════════════════
 
-if st.session_state.get("current_solver"):
+if st.session_state["current_solver"]:
     solver   = st.session_state["current_solver"]
-    query_id = st.session_state.get("current_query_id")
-    paid     = st.session_state.get("payment_done", False)
+    query_id = st.session_state["current_query_id"]
+    paid     = st.session_state["payment_done"]
+    domain   = solver.get("domain", "")
+    icon     = DOMAIN_ICONS.get(domain, "👤")
 
-    # ── Solver Profile Card ──────────────────────────────────
-    stars = "⭐" * int(solver["rating"]) + (
-        "✨" if solver["rating"] % 1 >= 0.5 else ""
-    )
-    domain_color = DOMAIN_COLORS.get(solver["domain"], "#FF6B00")
+    st.divider()
 
-    st.markdown(
-        f"""
-        <div class='solver-card'>
-            <div style='display:flex; justify-content:space-between;
-                        align-items:flex-start; flex-wrap:wrap; gap:8px;'>
-                <div>
-                    <span class='solver-name'>👤 {solver["name"]}</span>
-                    <span class='solver-domain-badge'
-                          style='background:{domain_color};'>
-                        {solver["domain"]}
-                    </span>
-                </div>
-                <div style='font-size:0.82rem; color:#6B7280;
-                            background:#F3F4F6; padding:4px 12px;
-                            border-radius:20px;'>
-                    Query #{query_id or "—"}
-                </div>
-            </div>
+    # ── AI Classification Result ─────────────────────────────
+    st.success(f"**AI Classification Complete!**   {icon} Domain detected: **{domain}**   |   Confidence: High ✅")
 
-            <div style='display:grid; grid-template-columns:1fr 1fr 1fr;
-                        gap:1rem; margin-top:1rem;'>
-                <div>
-                    <div style='font-size:0.7rem; color:#9CA3AF;
-                                text-transform:uppercase; letter-spacing:0.06em;'>
-                        Location
-                    </div>
-                    <div style='font-weight:600; font-size:0.95rem;
-                                color:#1A1A2E; margin-top:2px;'>
-                        📍 {solver["location"]}
-                    </div>
-                </div>
-                <div>
-                    <div style='font-size:0.7rem; color:#9CA3AF;
-                                text-transform:uppercase; letter-spacing:0.06em;'>
-                        Rating
-                    </div>
-                    <div style='font-weight:600; font-size:0.95rem;
-                                color:#1A1A2E; margin-top:2px;'>
-                        {stars} {solver["rating"]} / 5.0
-                    </div>
-                </div>
-                <div>
-                    <div style='font-size:0.7rem; color:#9CA3AF;
-                                text-transform:uppercase; letter-spacing:0.06em;'>
-                        Consultation Fee
-                    </div>
-                    <div style='font-weight:800; font-size:1.2rem;
-                                color:#FF6B00; margin-top:2px;'>
-                        ₹ {solver["fee"]}
-                    </div>
-                </div>
-            </div>
+    # ── Solver Profile Card (100% Native Streamlit) ──────────
+    st.markdown(f"### 👤 Your Matched Expert  —  Query #{query_id or '—'}")
 
-            <div style='margin-top:0.75rem; padding:0.5rem 0.75rem;
-                        background:#FFF8F0; border-radius:8px;
-                        font-size:0.82rem; color:#6B7280;'>
-                ✅ Verified Specialist &nbsp;|&nbsp;
-                🔒 Escrow Protected &nbsp;|&nbsp;
-                ⚡ Responds within 2 hours
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    card_col1, card_col2, card_col3 = st.columns(3)
 
-    # ── Payment Section ─────────────────────────────────────
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    if not paid:
-        st.markdown("### 💳 Secure Micro-Payment")
-        st.markdown(
-            f"""
-            <div class='info-box'>
-                Scan the UPI QR code below to pay <b>₹{solver["fee"]}</b>
-                to JanSetu Escrow. Your payment is held safely until your
-                consultation is complete.
-            </div>
-            """,
-            unsafe_allow_html=True,
+    with card_col1:
+        st.metric(
+            label="👤 Specialist",
+            value=solver["name"],
+            delta=f"{icon} {domain}",
         )
 
-        # ── QR Code ─────────────────────────────────────────
-        qr_bytes = generate_upi_qr(solver["fee"])
+    with card_col2:
+        st.metric(
+            label="📍 Location",
+            value=solver["location"],
+        )
 
-        col_qr, col_info = st.columns([1, 1.6], gap="large")
+    with card_col3:
+        st.metric(
+            label="⭐ Rating",
+            value=f"{solver['rating']} / 5.0",
+            delta="Verified Expert ✅",
+        )
 
-        with col_qr:
-            st.markdown("<div class='qr-box'>", unsafe_allow_html=True)
+    fee_col, status_col = st.columns(2)
+    with fee_col:
+        st.metric(
+            label="💰 Consultation Fee",
+            value=f"₹ {solver['fee']}",
+            delta="Escrow Protected 🔒",
+        )
+    with status_col:
+        st.metric(
+            label="⚡ Response Time",
+            value="Within 2 Hours",
+            delta="Active Now 🟢",
+        )
+
+    st.caption("✅ Verified Specialist   |   🔒 Escrow Protected   |   ⚡ Responds within 2 hours")
+
+    st.divider()
+
+    # ════════════════════════════════════════════════════════
+    # PAYMENT SECTION
+    # ════════════════════════════════════════════════════════
+
+    if not paid:
+        st.markdown("### 💳 Secure UPI Micro-Payment")
+        st.info(f"Scan the QR code below to Pay **₹{solver['fee']}** to JanSetu Escrow. Your payment is held safely until your consultation is complete.")
+
+        qr_col, info_col = st.columns([1, 1], gap="large")
+
+        with qr_col:
+            st.markdown("**📱 Scan with any UPI App**")
+            qr_bytes = make_qr(solver["fee"])
             if qr_bytes:
-                st.image(
-                    qr_bytes,
-                    caption=f"Scan to pay ₹{solver['fee']}",
-                    width=220,
-                )
+                st.image(qr_bytes, width=240, caption=f"Pay ₹{solver['fee']} — JanSetu Escrow")
             else:
-                # Fallback: show UPI link text if qrcode not installed
-                upi_link = (
-                    f"upi://pay?pa=jansetu@upi&pn=JanSetu"
-                    f"&am={solver['fee']}&cu=INR"
-                )
-                st.code(upi_link, language=None)
-                st.caption("Install `qrcode[pil]` to show QR image.")
-            st.markdown(
-                f"""
-                <div style='margin-top:0.5rem; font-size:0.78rem;
-                            color:#6B7280; text-align:center;'>
-                    Pay to: <b>jansetu@upi</b><br>
-                    Amount: <b style='color:#FF6B00;'>₹{solver["fee"]}</b>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
+                upi_link = f"upi://pay?pa=kr.ashish535.hd-1@okicici&pn=JanSetu&am={solver['fee']}&cu=INR"
+                st.code(upi_link)
+                st.caption("⚠️ Install `qrcode[pil]` in requirements.txt for QR image")
 
-        with col_info:
-            st.markdown(
-                """
-                <div style='padding:1rem 0;'>
-                    <div style='font-weight:700; font-size:0.95rem;
-                                color:#000080; margin-bottom:0.75rem;'>
-                        📲 How to pay:
-                    </div>
-                    <div style='font-size:0.875rem; color:#374151;
-                                line-height:1.8;'>
-                        1. Open any UPI app<br>
-                           <span style='color:#9CA3AF; font-size:0.78rem;'>
-                           (PhonePe, GPay, Paytm, BHIM…)
-                           </span><br>
-                        2. Tap <b>Scan QR</b><br>
-                        3. Point camera at the QR code<br>
-                        4. Confirm ₹{} payment<br>
-                        5. Click the green button below ✅
-                    </div>
-                </div>
-                """.format(solver["fee"]),
-                unsafe_allow_html=True,
-            )
+            st.caption(f"UPI ID: **kr.ashish535.hd-1@okicici**   |   Amount: **₹{solver['fee']}**")
 
-            # ── Payment Confirmation Button ──────────────────
+        with info_col:
+            st.markdown("**📲 Steps to Pay:**")
+            st.markdown("""
+1. Open **PhonePe / GPay / Paytm / BHIM**
+2. Tap **Scan QR Code**
+3. Point your camera at the QR
+4. Confirm the payment of ₹{}
+5. Come back here and click the button below ✅
+            """.format(solver["fee"]))
+
+            st.markdown("---")
+
             if st.button(
-                f"👉 Click here after scanning to confirm payment  ✅",
+                "✅ I have paid — Confirm & Get Contact",
                 use_container_width=True,
                 type="primary",
                 key="confirm_payment_btn",
             ):
                 if query_id:
-                    success = mark_query_paid(query_id)
-                    if success:
+                    ok = mark_paid(query_id)
+                    if ok:
                         st.session_state["payment_done"] = True
                         st.rerun()
                     else:
-                        st.error("Payment confirmation failed. Please retry.")
+                        st.error("❌ Could not confirm payment. Please try again.")
                 else:
-                    # Edge case: query wasn't saved, still mark locally
                     st.session_state["payment_done"] = True
                     st.rerun()
 
+    # ════════════════════════════════════════════════════════
+    # POST-PAYMENT SUCCESS SCREEN
+    # ════════════════════════════════════════════════════════
+
     else:
-        # ── POST-PAYMENT SUCCESS SCREEN ─────────────────────
-        st.markdown(
-            f"""
-            <div style='background:linear-gradient(135deg, #F0FDF4, #DCFCE7);
-                        border:2px solid #22C55E; border-radius:16px;
-                        padding:2rem; text-align:center; margin-top:1rem;'>
-                <div style='font-size:3rem; margin-bottom:0.5rem;'>🎉</div>
-                <div style='font-family:"Baloo 2",cursive; font-size:1.5rem;
-                            font-weight:800; color:#15803D;'>
-                    Payment Confirmed!
-                </div>
-                <div style='color:#166534; margin:0.5rem 0 1rem;
-                            font-size:0.95rem;'>
-                    Your consultation fee of <b>₹{solver["fee"]}</b>
-                    is safely held in escrow.
-                </div>
+        st.balloons()
 
-                <div style='background:white; border-radius:12px;
-                            padding:1.25rem 2rem; display:inline-block;
-                            border:1px solid #BBF7D0; margin-top:0.5rem;'>
-                    <div style='font-size:0.75rem; color:#9CA3AF;
-                                text-transform:uppercase; letter-spacing:0.08em;
-                                margin-bottom:4px;'>
-                        📞 Direct Contact Number
-                    </div>
-                    <div style='font-family:"Baloo 2",cursive; font-size:2rem;
-                                font-weight:800; color:#000080;
-                                letter-spacing:0.05em;'>
-                        {solver["contact"]}
-                    </div>
-                    <div style='font-size:0.8rem; color:#6B7280; margin-top:4px;'>
-                        {solver["name"]} · {solver["domain"]} Specialist
-                    </div>
-                </div>
+        st.success("## 🎉 Payment Confirmed!")
+        st.markdown(f"Your consultation fee of **₹{solver['fee']}** is safely held in JanSetu escrow.")
 
-                <div style='margin-top:1.25rem; font-size:0.82rem; color:#6B7280;'>
-                    Call or WhatsApp the number above.<br>
-                    Escrow is released after your session is complete.
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.divider()
 
-        # ── New Query button ─────────────────────────────────
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("### 📞 Your Expert's Direct Contact")
+
+        contact_col, detail_col = st.columns(2)
+
+        with contact_col:
+            st.metric(
+                label="📱 Phone Number",
+                value=solver["contact"],
+            )
+            st.success("Tap & call this number directly!")
+
+        with detail_col:
+            st.metric(
+                label="👤 Expert Name",
+                value=solver["name"],
+            )
+            st.metric(
+                label=f"{icon} Domain",
+                value=f"{domain} Specialist",
+            )
+
+        st.info("📲 Call or WhatsApp the number above.  Escrow is released after your session is complete.")
+
+        st.divider()
+
         if st.button(
             "🔄 Submit a New Problem",
             use_container_width=True,
             key="new_query_btn",
         ):
-            for key in ["current_query_id", "current_solver", "payment_done"]:
-                st.session_state.pop(key, None)
+            st.session_state["current_query_id"] = None
+            st.session_state["current_solver"]   = None
+            st.session_state["payment_done"]      = False
             st.rerun()
 
-# ── Footer nudge ────────────────────────────────────────────
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown(
-    """
-    <div style='text-align:center; font-size:0.78rem; color:#9CA3AF;
-                padding:1rem; border-top:1px solid #E8DDD0; margin-top:2rem;'>
-        🔒 Your data is encrypted and never shared without consent. &nbsp;|&nbsp;
-        JanSetu is a not-for-profit Digital Public Infrastructure initiative.
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+
+# ── Footer ───────────────────────────────────────────────────
+st.divider()
+st.caption("🔒 Your data is never shared without consent. JanSetu is a DPI - Digital Public Infrastructure initiative for Bharat.")
