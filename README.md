@@ -6,7 +6,7 @@
 
 <br/><br/>
 
- `India's Problem-Solving OS
+ # 🇮🇳 JanSetu - India's Problem-Solving OS
 
 ### *"Connecting 900 Million Rural Citizens with Verified Local Experts — One Problem at a Time"*
 
