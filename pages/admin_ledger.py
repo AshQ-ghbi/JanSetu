@@ -9,7 +9,15 @@ DOMAIN_ICONS = {
     "Education":   "🏫",
     "Healthcare":  "🏥",
     "MSME":        "🏪",
-    "Rural Access":"📡",
+    "Rural Access": "📡",
+}
+
+DOMAIN_COLORS = {
+    "Agriculture": "#4CAF50",
+    "Education":   "#2196F3",
+    "Healthcare":  "#E91E63",
+    "MSME":        "#FF9800",
+    "Rural Access": "#9C27B0",
 }
 
 # ════════════════════════════════════════════════════════════
@@ -40,14 +48,32 @@ def load_queries():
 
 
 # ════════════════════════════════════════════════════════════
-# PAGE HEADER
+# PAGE HEADER — HERO BANNER
 # ════════════════════════════════════════════════════════════
 
-st.markdown("## 🕵️ Solver & Admin Ledger")
-st.caption("Real-time Operational Intelligence Dashboard for JanSetu administrators and hackathon judges.")
-st.divider()
+st.markdown("""
+<div style="
+    background: linear-gradient(135deg, #1a1a6e 0%, #000080 50%, #2d0080 100%);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 1.5rem;
+">
+    <div style="font-size:2rem; font-weight:800; color:#FFFFFF; margin-bottom:4px;">
+        🕵️ Solver &amp; Admin Ledger
+    </div>
+    <div style="font-size:0.92rem; color:rgba(255,255,255,0.75); max-width:600px;">
+        Real-time Operational Intelligence Dashboard for JanSetu administrators and hackathon judges.
+    </div>
+    <div style="margin-top:1rem; display:flex; gap:10px; flex-wrap:wrap;">
+        <span style="background:rgba(255,255,255,0.12);color:#fff;font-size:0.72rem;font-weight:600;padding:4px 12px;border-radius:20px;">📊 Live KPIs</span>
+        <span style="background:rgba(255,255,255,0.12);color:#fff;font-size:0.72rem;font-weight:600;padding:4px 12px;border-radius:20px;">📋 Query Ledger</span>
+        <span style="background:rgba(255,255,255,0.12);color:#fff;font-size:0.72rem;font-weight:600;padding:4px 12px;border-radius:20px;">🧑‍💼 Solver Registry</span>
+        <span style="background:rgba(255,255,255,0.12);color:#fff;font-size:0.72rem;font-weight:600;padding:4px 12px;border-radius:20px;">💼 Escrow Summary</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# Refresh button
+# Refresh row
 col_btn, col_time = st.columns([1, 3])
 with col_btn:
     if st.button("🔄 Refresh Data", use_container_width=True):
@@ -63,10 +89,10 @@ with st.spinner("Loading platform data..."):
     solvers = load_solvers()
     queries = load_queries()
 
-total_tickets  = len(queries)
-active_solvers = sum(1 for s in solvers if s.get("status") == "Active")
-paid_queries   = sum(1 for q in queries if q.get("payment_status") == "Paid")
-total_revenue  = sum(
+total_tickets   = len(queries)
+active_solvers  = sum(1 for s in solvers if s.get("status") == "Active")
+paid_queries    = sum(1 for q in queries if q.get("payment_status") == "Paid")
+total_revenue   = sum(
     q["solvers"]["fee"]
     for q in queries
     if q.get("payment_status") == "Paid" and q.get("solvers")
@@ -79,7 +105,11 @@ conversion_rate = round((paid_queries / total_tickets) * 100, 1) if total_ticket
 # KPI METRICS ROW
 # ════════════════════════════════════════════════════════════
 
-st.markdown("### 📊 Platform KPIs")
+st.markdown("""
+<div style="font-size:1.1rem; font-weight:700; color:#1A1A2E; margin-bottom:0.75rem;">
+    📊 Platform KPIs
+</div>
+""", unsafe_allow_html=True)
 
 m1, m2, m3, m4, m5, m6 = st.columns(6)
 
@@ -88,7 +118,7 @@ with m1:
 with m2:
     st.metric("⚡ Active Solvers", active_solvers)
 with m3:
-    st.metric("💰 Revenue (₹)", f"₹{total_revenue}")
+    st.metric("💰 Revenue (₹)", f"₹{total_revenue:,}")
 with m4:
     st.metric("✅ Paid Sessions", paid_queries)
 with m5:
@@ -96,7 +126,7 @@ with m5:
 with m6:
     st.metric("📈 Conversion", f"{conversion_rate}%")
 
-st.divider()
+st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════
@@ -104,7 +134,11 @@ st.divider()
 # ════════════════════════════════════════════════════════════
 
 if queries:
-    st.markdown("### 🗂️ Query Distribution by Domain")
+    st.markdown("""
+<div style="font-size:1.1rem; font-weight:700; color:#1A1A2E; margin-bottom:0.75rem;">
+    🗂️ Query Distribution by Domain
+</div>
+""", unsafe_allow_html=True)
 
     domain_counts = {}
     for q in queries:
@@ -112,23 +146,31 @@ if queries:
         domain_counts[d] = domain_counts.get(d, 0) + 1
 
     dist_df = pd.DataFrame(
-        [{"Domain": f"{DOMAIN_ICONS.get(d,'❓')} {d}", "Queries": c}
-         for d, c in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True)]
+        [
+            {
+                "Domain": f"{DOMAIN_ICONS.get(d, '❓')} {d}",
+                "Queries": c,
+            }
+            for d, c in sorted(domain_counts.items(), key=lambda x: x[1], reverse=True)
+        ]
     )
     st.bar_chart(dist_df.set_index("Domain"))
-    st.divider()
+    st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════
 # LIVE QUERY LEDGER
 # ════════════════════════════════════════════════════════════
 
-st.markdown("### 📋 Live Query Ledger")
+st.markdown("""
+<div style="font-size:1.1rem; font-weight:700; color:#1A1A2E; margin-bottom:0.75rem;">
+    📋 Live Query Ledger
+</div>
+""", unsafe_allow_html=True)
 
 if not queries:
     st.info("📭 No queries yet. Submit one from the Citizen Portal!")
 else:
-    # Build a clean DataFrame
     rows = []
     for q in queries:
         solver_info = q.get("solvers") or {}
@@ -141,16 +183,17 @@ else:
 
         domain = q.get("ai_category", "—")
         status = q.get("payment_status", "Pending")
+        raw    = q.get("raw_problem") or ""
 
         rows.append({
-            "ID":          f"#{q.get('id', '?')}",
-            "Citizen":     q.get("citizen_name", "—"),
-            "Problem":     (q.get("raw_problem") or "")[:60] + ("..." if len(q.get("raw_problem","")) > 60 else ""),
-            "Domain":      f"{DOMAIN_ICONS.get(domain,'❓')} {domain}",
-            "Solver":      solver_info.get("name", "—"),
-            "Fee":         f"₹{solver_info.get('fee','—')}" if solver_info else "—",
-            "Status":      "✅ Paid" if status == "Paid" else "⏳ Pending",
-            "Submitted":   created_str,
+            "ID":        f"#{q.get('id', '?')}",
+            "Citizen":   q.get("citizen_name", "—"),
+            "Problem":   raw[:60] + ("…" if len(raw) > 60 else ""),
+            "Domain":    f"{DOMAIN_ICONS.get(domain, '❓')} {domain}",
+            "Solver":    solver_info.get("name", "—"),
+            "Fee":       f"₹{solver_info.get('fee', '—')}" if solver_info else "—",
+            "Status":    "✅ Paid" if status == "Paid" else "⏳ Pending",
+            "Submitted": created_str,
         })
 
     df = pd.DataFrame(rows)
@@ -159,31 +202,34 @@ else:
         use_container_width=True,
         hide_index=True,
         column_config={
-            "ID":        st.column_config.TextColumn("ID", width="small"),
-            "Citizen":   st.column_config.TextColumn("Citizen", width="medium"),
+            "ID":        st.column_config.TextColumn("ID",             width="small"),
+            "Citizen":   st.column_config.TextColumn("Citizen",        width="medium"),
             "Problem":   st.column_config.TextColumn("Problem Preview", width="large"),
-            "Domain":    st.column_config.TextColumn("Domain", width="medium"),
+            "Domain":    st.column_config.TextColumn("Domain",         width="medium"),
             "Solver":    st.column_config.TextColumn("Matched Solver", width="medium"),
-            "Fee":       st.column_config.TextColumn("Fee", width="small"),
-            "Status":    st.column_config.TextColumn("Payment", width="small"),
-            "Submitted": st.column_config.TextColumn("Submitted", width="medium"),
+            "Fee":       st.column_config.TextColumn("Fee",            width="small"),
+            "Status":    st.column_config.TextColumn("Payment",        width="small"),
+            "Submitted": st.column_config.TextColumn("Submitted",      width="medium"),
         },
     )
     st.caption(f"Showing {len(queries)} record(s) · Sorted newest first")
 
-st.divider()
+st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════
 # SOLVER REGISTRY
 # ════════════════════════════════════════════════════════════
 
-st.markdown("### 🧑‍💼 Verified Solver Registry")
+st.markdown("""
+<div style="font-size:1.1rem; font-weight:700; color:#1A1A2E; margin-bottom:0.75rem;">
+    🧑‍💼 Verified Solver Registry
+</div>
+""", unsafe_allow_html=True)
 
 if not solvers:
     st.warning("No solvers found. Please run database_setup.sql in Supabase.")
 else:
-    # Show as a clean table
     solver_rows = []
     for s in solvers:
         domain = s.get("domain", "—")
@@ -193,10 +239,10 @@ else:
 
         solver_rows.append({
             "Name":     s.get("name", "—"),
-            "Domain":   f"{DOMAIN_ICONS.get(domain,'❓')} {domain}",
+            "Domain":   f"{DOMAIN_ICONS.get(domain, '❓')} {domain}",
             "Location": s.get("location", "—"),
             "Rating":   f"{stars}  {rating}/5",
-            "Fee":      f"₹{s.get('fee','—')}",
+            "Fee":      f"₹{s.get('fee', '—')}",
             "Status":   "🟢 Active" if status == "Active" else "🔴 Inactive",
             "Contact":  s.get("contact", "—"),
         })
@@ -207,24 +253,28 @@ else:
         use_container_width=True,
         hide_index=True,
         column_config={
-            "Name":     st.column_config.TextColumn("Name", width="medium"),
-            "Domain":   st.column_config.TextColumn("Domain", width="medium"),
+            "Name":     st.column_config.TextColumn("Name",     width="medium"),
+            "Domain":   st.column_config.TextColumn("Domain",   width="medium"),
             "Location": st.column_config.TextColumn("Location", width="large"),
-            "Rating":   st.column_config.TextColumn("Rating", width="medium"),
-            "Fee":      st.column_config.TextColumn("Fee", width="small"),
-            "Status":   st.column_config.TextColumn("Status", width="small"),
-            "Contact":  st.column_config.TextColumn("Contact", width="medium"),
+            "Rating":   st.column_config.TextColumn("Rating",   width="medium"),
+            "Fee":      st.column_config.TextColumn("Fee",      width="small"),
+            "Status":   st.column_config.TextColumn("Status",   width="small"),
+            "Contact":  st.column_config.TextColumn("Contact",  width="medium"),
         },
     )
 
-st.divider()
+st.markdown("<br>", unsafe_allow_html=True)
 
 
 # ════════════════════════════════════════════════════════════
 # REVENUE SUMMARY TABLE
 # ════════════════════════════════════════════════════════════
 
-st.markdown("### 💼 Escrow Revenue Summary by Domain")
+st.markdown("""
+<div style="font-size:1.1rem; font-weight:700; color:#1A1A2E; margin-bottom:0.75rem;">
+    💼 Escrow Revenue Summary by Domain
+</div>
+""", unsafe_allow_html=True)
 
 paid_by_domain  = {}
 count_by_domain = {}
@@ -242,17 +292,17 @@ else:
     for d, revenue in sorted(paid_by_domain.items(), key=lambda x: x[1], reverse=True):
         sessions = count_by_domain.get(d, 1)
         rev_rows.append({
-            "Domain":      f"{DOMAIN_ICONS.get(d,'❓')} {d}",
-            "Sessions":    sessions,
-            "Revenue":     f"₹{revenue}",
-            "Avg. Ticket": f"₹{round(revenue/sessions)}",
+            "Domain":       f"{DOMAIN_ICONS.get(d, '❓')} {d}",
+            "Sessions":     sessions,
+            "Revenue":      f"₹{revenue:,}",
+            "Avg. Ticket":  f"₹{round(revenue / sessions):,}",
         })
 
-    # Add total row
+    # Total row
     rev_rows.append({
         "Domain":      "🏆 TOTAL",
         "Sessions":    sum(count_by_domain.values()),
-        "Revenue":     f"₹{sum(paid_by_domain.values())}",
+        "Revenue":     f"₹{sum(paid_by_domain.values()):,}",
         "Avg. Ticket": "—",
     })
 
@@ -262,12 +312,24 @@ else:
         use_container_width=True,
         hide_index=True,
         column_config={
-            "Domain":      st.column_config.TextColumn("Domain", width="large"),
-            "Sessions":    st.column_config.NumberColumn("Sessions", width="small"),
-            "Revenue":     st.column_config.TextColumn("Revenue", width="medium"),
+            "Domain":      st.column_config.TextColumn("Domain",      width="large"),
+            "Sessions":    st.column_config.NumberColumn("Sessions",   width="small"),
+            "Revenue":     st.column_config.TextColumn("Revenue",     width="medium"),
             "Avg. Ticket": st.column_config.TextColumn("Avg. Ticket", width="medium"),
         },
     )
 
-st.divider()
-st.caption("🔐 Admin Ledger · JanSetu v1.0 · All transactions stored in Supabase PostgreSQL · Data refreshes on every page load.")
+# Footer
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("""
+<div style="
+    text-align:center;
+    font-size:0.75rem;
+    color:#94A3B8;
+    padding: 1rem 0 0.5rem;
+    border-top: 1px solid #E2E8F0;
+">
+    🔐 Admin Ledger · JanSetu v1.0 · All transactions stored in
+    <strong>Supabase PostgreSQL</strong> · Data refreshes on every page load.
+</div>
+""", unsafe_allow_html=True)
