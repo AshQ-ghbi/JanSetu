@@ -252,6 +252,46 @@ for key, default in [
 
 
 # ════════════════════════════════════════════════════════════
+# PAGE-LEVEL CSS FIX — force visible label & input text
+# ════════════════════════════════════════════════════════════
+
+st.markdown("""
+<style>
+/* Form field labels */
+.stTextInput label,
+.stTextArea label {
+    color: #1A1A2E !important;
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+}
+
+/* Input text typed by user */
+.stTextInput input,
+.stTextArea textarea {
+    color: #1A1A2E !important;
+    background: #FFFFFF !important;
+}
+
+/* Placeholder text */
+.stTextInput input::placeholder,
+.stTextArea textarea::placeholder {
+    color: #94A3B8 !important;
+    opacity: 1 !important;
+}
+
+/* Section headings */
+.stMarkdown h4 {
+    color: #1A1A2E !important;
+}
+
+/* General paragraph text */
+.stMarkdown p {
+    color: #374151 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ════════════════════════════════════════════════════════════
 # PAGE HEADER — HERO BANNER
 # ════════════════════════════════════════════════════════════
 
