@@ -79,8 +79,8 @@ No middlemen. No bureaucracy. No internet literacy required beyond a form.
 │                     CITIZEN (Mobile)                     │
 │              Describes problem in any language           │
 └──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
+                                │
+                                ▼
 ┌─────────────────────────────────────────────────────────┐
 │               JanSetu — Streamlit Frontend               │
 │                                                          │
@@ -89,21 +89,21 @@ No middlemen. No bureaucracy. No internet literacy required beyond a form.
 │   │  (Keyword AI)    │      │  KPIs · Ledger · Revenue │ │
 │   │  5 Domain Match  │      │  Solver Registry         │ │
 │   └────────┬─────────┘      └──────────────────────────┘ │
-│            │                                              │
-│            ▼                                              │
-│   ┌─────────────────┐                                    │
-│   │  Solver Matcher  │  → Highest-rated Active Expert    │
-│   │  (Supabase SQL)  │                                    │
+│              │                                               │
+│              ▼                                               │
+│   ┌─────────────────┐                                     │
+│   │  Solver Matcher  │  → Highest-rated Active Expert        │
+│   │  (Supabase SQL)  │                                        │
 │   └────────┬─────────┘                                    │
-└────────────┼────────────────────────────────────────────┘
-             │
-             ▼
+└───────────┼────────────────────────────────────────────┘
+         ...  │
+          ....▼
 ┌─────────────────────────────────────────────────────────┐
-│              Supabase (PostgreSQL + REST API)             │
-│   solvers table  ·  queries table  ·  payment tracking   │
+│              Supabase (PostgreSQL + REST API)                     │
+│   solvers table  ·  queries table  ·  payment tracking            │
 └──────────────────────────┬──────────────────────────────┘
-                           │
-                           ▼
+                                │
+                              ..▼
 ┌─────────────────────────────────────────────────────────┐
 │                    UPI Escrow Payment                     │
 │         QR Code → GPay / PhonePe / Paytm / BHIM          │
@@ -183,11 +183,6 @@ cd JanSetu
 pip install -r requirements.txt
 
 # 3. Add Supabase secrets
-mkdir -p .streamlit
-cat > .streamlit/secrets.toml << EOF
-SUPABASE_URL = "your-supabase-project-url"
-SUPABASE_KEY = "your-supabase-anon-key"
-EOF
 
 # 4. Run the app
 streamlit run main_app.py
@@ -241,7 +236,7 @@ CREATE TABLE queries (
 
 <div align="center">
 
-**Ashish Kumar**
+**Ashish Kumar** <br/><br/>
 *Team Beyond Life*
 
 Cyphersnova Hackathon 2026
