@@ -1,6 +1,6 @@
 # 🇮🇳 JanSetu — Unified Problem-Solving OS for Bharat
 
-> **Hackathon Prototype** · India at a Turning Point · Built in ≤10 hours
+> **Hackathon Prototype** · Cyphersnova Hackathon 2026 · Built in ≤10 hours
 
 JanSetu is a localized **Digital Public Infrastructure (DPI) router** that
 instantly connects rural citizens with verified local specialists across 5
@@ -84,6 +84,7 @@ jansetu/
   tokens needed, works instantly for demo.
 - **Language-agnostic**: Classifier handles Hindi + English mixed text.
 - **Mobile-friendly**: Responsive CSS grid, large touch targets.
+- In next version, Govt supported *Bhashini AI* for all 22 languages will be added.
 
 ---
 
