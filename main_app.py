@@ -44,7 +44,7 @@ with st.sidebar:
     st.markdown("📡 Rural Access")
     st.divider()
     st.caption("🔒 Powered by Beyond Life")
-    st.caption("Connect with builders at Github"
+    st.caption("Connect with builders at Github")
     st.caption("JanSetu v1.0 · Cyphersnova Hackathon 2026 by Ashish Kumar")
 
 # ── 4. Page Definitions ──────────────────────────────────────
