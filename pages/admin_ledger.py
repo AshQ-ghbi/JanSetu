@@ -111,19 +111,20 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-m1, m2, m3, m4, m5, m6 = st.columns(6)
-
-with m1:
+row1_c1, row1_c2, row1_c3 = st.columns(3)
+with row1_c1:
     st.metric("🎫 Total Tickets", total_tickets)
-with m2:
+with row1_c2:
     st.metric("⚡ Active Solvers", active_solvers)
-with m3:
-    st.metric("💰 Revenue (₹)", f"₹{total_revenue:,}")
-with m4:
+with row1_c3:
+    st.metric("💰 Revenue", f"₹{total_revenue:,}")
+ 
+row2_c1, row2_c2, row2_c3 = st.columns(3)
+with row2_c1:
     st.metric("✅ Paid Sessions", paid_queries)
-with m5:
+with row2_c2:
     st.metric("⏳ Pending", pending_queries)
-with m6:
+with row2_c3:
     st.metric("📈 Conversion", f"{conversion_rate}%")
 
 st.markdown("<br>", unsafe_allow_html=True)
