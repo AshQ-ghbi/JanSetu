@@ -240,7 +240,7 @@ Cyphersnova Hackathon 2026
 
 ## 📄 License
 
-License — free to use, modify, and build upon for public good.
+MIT License — free to use, modify, and build upon for public good.
 
 ---
 
